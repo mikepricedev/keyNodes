@@ -1,0 +1,29 @@
+{
+  "name": "key-nodes",
+  "version": "0.0.1",
+  "description": "Tree nodes for key and key/value pairs in object path hierarchies.",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "mocha --opts ./mocha.opts",
+    "build-ts": "tsc",
+    "build-docs": "rm -rf docs; npx typedoc",
+    "build": "rm -fr build; rm -rf docs; npm run test && { npm run build-docs; npm run build-ts; }",
+    "test-watch": "mocha  --opts ./mocha.opts --watch --watch-extensions ts"
+  },
+  "author": "Michael Price <mikepricedev@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/chai": "^4.2.1",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.7.4",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.0",
+    "ts-node": "^8.3.0",
+    "typedoc": "^0.15.0",
+    "typedoc-plugin-markdown": "^2.1.11",
+    "typescript": "^3.6.2"
+  },
+  "dependencies": {
+    "path-notation": "^1.0.0"
+  }
+}
