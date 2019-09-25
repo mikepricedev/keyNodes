@@ -111,6 +111,18 @@ describe(`KeyNode`,()=>{
 
       });
 
+      it(`Overrides "index" types when a single sibling is of 
+          type "key"`, ()=>
+      {
+
+        const indexKey = fooBarQuxKey.addChild(0);
+        expect(indexKey).property('keyType').to.equal('index');
+        
+        fooBarQuxKey.addChild('keyTypeIsKey');
+        expect(indexKey).property('keyType').to.equal('key');
+
+      });
+
     });
 
     describe('rootKey',()=>{

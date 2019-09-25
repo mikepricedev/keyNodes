@@ -5,6 +5,7 @@ import KeyNodeError from './KeyNodeError';
 const CHILDREN:unique symbol = Symbol();
 const DEPTH:unique symbol = Symbol();
 const KEY:unique symbol = Symbol();
+const KEY_TYPE:unique symbol = Symbol();
 const PARENT:unique symbol = Symbol();
 const PATH_NOTATION:unique symbol = Symbol();
 const ROOT_KEY:unique symbol = Symbol();
@@ -29,6 +30,7 @@ export default class KeyNode<
   private readonly [CHILDREN] = new Map<string, Tself>();
   private readonly [DEPTH]:number;
   private readonly [KEY]:Tkey;
+  private readonly [KEY_TYPE]:'key' | 'index';
   private readonly [PARENT]:Tself | null;
   private [PATH_NOTATION]:PathNotation;
   private [ROOT_KEY]:Tself;
@@ -44,7 +46,7 @@ export default class KeyNode<
   {
     
     
-    super(key.toString()); 
+    super(key.toString());
     
     const keyStr = key.toString();
     
@@ -76,6 +78,8 @@ export default class KeyNode<
       this[KEY] = key;
     
     }
+
+    this[KEY_TYPE] = typeof this[KEY] === 'string' ? 'key' : 'index';
     
     if(this[PARENT] === null) {
       
@@ -103,10 +107,27 @@ export default class KeyNode<
     return this[KEY];
   
   }
-
-  get keyType(): 'index' | 'key' {
   
-    return typeof this[KEY] === 'string' ? 'key' : 'index';
+  /**
+   * Returns "index" for keys of type "number" and "key" for keys of type 
+   * "string".
+   * @remarks
+   * Type "index" is overridden to "key" when a sibling [[KeyNode]] is
+   * type "key".
+   */
+  get keyType(): 'index' | 'key' {
+    
+    for(const siblingKey of this.siblings()) {
+
+      if(siblingKey[KEY_TYPE] === 'key') {
+
+        return 'key';
+
+      }
+
+    }
+
+    return this[KEY_TYPE];
   
   }
 
