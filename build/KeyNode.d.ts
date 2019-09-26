@@ -2,6 +2,7 @@ import PathNotation from 'path-notation';
 declare const CHILDREN: unique symbol;
 declare const DEPTH: unique symbol;
 declare const KEY: unique symbol;
+declare const KEY_TYPE: unique symbol;
 declare const PARENT: unique symbol;
 declare const PATH_NOTATION: unique symbol;
 declare const ROOT_KEY: unique symbol;
@@ -19,6 +20,7 @@ export default class KeyNode<Tkey extends string | number = string | number, Tse
     private readonly [CHILDREN];
     private readonly [DEPTH];
     private readonly [KEY];
+    private readonly [KEY_TYPE];
     private readonly [PARENT];
     private [PATH_NOTATION];
     private [ROOT_KEY];
@@ -30,6 +32,13 @@ export default class KeyNode<Tkey extends string | number = string | number, Tse
     constructor(key: Tkey | KeyNode<Tkey>, _privateIniArgs_?: Partial<IprivateIniArgs<Tself>>);
     readonly parent: Tself | null;
     readonly key: Tkey;
+    /**
+     * Returns "index" for keys of type "number" and "key" for keys of type
+     * "string".
+     * @remarks
+     * Type "index" is overridden to "key" when a sibling [[KeyNode]] is
+     * type "key".
+     */
     readonly keyType: 'index' | 'key';
     /**
      * Returns the root key of the path that leads to this [[KeyNode]]
@@ -66,6 +75,7 @@ export default class KeyNode<Tkey extends string | number = string | number, Tse
      * Utility [[KeyNode._privateIniArgs]] helps with override implementation.
      */
     addSibling<TsiblingKey extends number | string>(siblingKey: TsiblingKey | KeyNode<TsiblingKey>): KeyNode<TsiblingKey>;
+    removeSibling(siblingKey: string | number): boolean;
     children(): IterableIterator<Tself>;
     parents(): IterableIterator<Tself>;
     /**

@@ -84,6 +84,7 @@
 * [pathToKey](keyvaluenode.md#pathtokey)
 * [redo](keyvaluenode.md#redo)
 * [removeChild](keyvaluenode.md#removechild)
+* [removeSibling](keyvaluenode.md#removesibling)
 * [repeat](keyvaluenode.md#repeat)
 * [replace](keyvaluenode.md#replace)
 * [rootKeys](keyvaluenode.md#rootkeys)
@@ -238,6 +239,13 @@ ___
 • **get keyType**(): *"index" | "key"*
 
 *Inherited from [KeyNode](keynode.md).[keyType](keynode.md#keytype)*
+
+Returns "index" for keys of type "number" and "key" for keys of type
+"string".
+
+**`remarks`** 
+Type "index" is overridden to "key" when a sibling [KeyNode](keynode.md) is
+type "key".
 
 **Returns:** *"index" | "key"*
 
@@ -980,6 +988,22 @@ ___
 Name | Type |
 ------ | ------ |
 `childKey` | string &#124; number |
+
+**Returns:** *boolean*
+
+___
+
+###  removeSibling
+
+▸ **removeSibling**(`siblingKey`: string | number): *boolean*
+
+*Inherited from [KeyNode](keynode.md).[removeSibling](keynode.md#removesibling)*
+
+**Parameters:**
+
+Name | Type |
+------ | ------ |
+`siblingKey` | string &#124; number |
 
 **Returns:** *boolean*
 

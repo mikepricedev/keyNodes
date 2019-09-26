@@ -84,6 +84,7 @@ NOT be passed during [KeyNode](keynode.md) instantiation.
 * [parents](keynode.md#parents)
 * [pathToKey](keynode.md#pathtokey)
 * [removeChild](keynode.md#removechild)
+* [removeSibling](keynode.md#removesibling)
 * [repeat](keynode.md#repeat)
 * [replace](keynode.md#replace)
 * [rootKeys](keynode.md#rootkeys)
@@ -189,6 +190,13 @@ ___
 ###  keyType
 
 • **get keyType**(): *"index" | "key"*
+
+Returns "index" for keys of type "number" and "key" for keys of type
+"string".
+
+**`remarks`** 
+Type "index" is overridden to "key" when a sibling [KeyNode](keynode.md) is
+type "key".
 
 **Returns:** *"index" | "key"*
 
@@ -797,6 +805,20 @@ ___
 Name | Type |
 ------ | ------ |
 `childKey` | string &#124; number |
+
+**Returns:** *boolean*
+
+___
+
+###  removeSibling
+
+▸ **removeSibling**(`siblingKey`: string | number): *boolean*
+
+**Parameters:**
+
+Name | Type |
+------ | ------ |
+`siblingKey` | string &#124; number |
 
 **Returns:** *boolean*
 
