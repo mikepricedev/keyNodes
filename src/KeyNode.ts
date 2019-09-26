@@ -53,7 +53,9 @@ export default class KeyNode<
     this[PARENT] = _privateIniArgs_._parent_;
     this[ROOT_KEY_NODES] = _privateIniArgs_._rootKeyNodes_;
     
-    if(this.hasSibling(keyStr)) {
+    if(this[PARENT] === null ? this[ROOT_KEY_NODES].has(keyStr) :
+      this[PARENT][CHILDREN].has(keyStr)) 
+    {
       
       throw new KeyNodeError<KeyNode>(`'${keyStr}' already exists in sibling set.`+
       `  Sibling key literals must be unique.`, this.getSibling(keyStr));
@@ -253,7 +255,11 @@ export default class KeyNode<
 
     const siblingKeyLiteral = siblingKey.toString();
     
-    if(this[PARENT] === null) {
+    if(this.toString() === siblingKeyLiteral){
+
+      return false;
+
+    } else if(this[PARENT] === null) {
 
       return this[ROOT_KEY_NODES].has(siblingKeyLiteral);
 
@@ -299,6 +305,26 @@ export default class KeyNode<
     
     return new KeyNode<TsiblingKey>(siblingKey,
       this._privateIniArgs('sibling'));
+
+  }
+
+  removeSibling(siblingKey:string | number): boolean {
+
+    const siblingKeyLiteral = siblingKey.toString();
+
+    if(this.hasSibling(siblingKey) === false) {
+    
+      return false;
+    
+    } else if(this.parent === null) {
+
+      return this[ROOT_KEY_NODES].delete(siblingKeyLiteral)
+
+    } else {
+
+      return this[PARENT][CHILDREN].delete(siblingKeyLiteral);
+
+    }
 
   }
 

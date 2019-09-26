@@ -309,6 +309,7 @@ describe(`KeyNode`,()=>{
       });
 
     });
+    
 
     describe('addSibling',()=>{
 
@@ -349,6 +350,47 @@ describe(`KeyNode`,()=>{
 
         expect(fooBarCopy.getChild('qux')).to.not.equal(fooBarQuxKey);
         expect(fooBarCopy.getChild('qux').key).to.equal(fooBarQuxKey.key);
+
+      });
+
+    });
+
+    describe('removeSibling',()=>{
+
+      it('Removes sibling key node.',() =>{
+
+        expect(fooBarKey.hasSibling('baz')).to.be.true;
+        fooBarKey.removeSibling('baz');
+        expect(fooBarKey.hasSibling('baz')).to.be.false;
+
+      });
+
+      it('Removes sibling root key node.',() =>{
+
+        fooKey.addSibling('fooSibling');
+
+        expect(fooKey.hasSibling('fooSibling')).to.be.true;
+        fooKey.removeSibling('fooSibling');
+        expect(fooKey.hasSibling('fooSibling')).to.be.false;
+
+      });
+
+      it(`Returns true when removal is successful.`,() =>{
+
+        expect(fooBarKey.removeSibling('baz')).to.be.true;
+
+      });
+      
+      it(`Returns false when removal is unsuccessful.`,() =>{
+
+        expect(fooBarKey.removeSibling('DNE')).to.be.false;
+
+      });
+
+      it(`Will NOT remove itself.`, ()=>{
+
+        expect(fooKey.removeSibling('foo')).to.be.false;
+        expect(fooBarKey.removeSibling('bar')).to.be.false;
 
       });
 
