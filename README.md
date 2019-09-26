@@ -8,7 +8,7 @@ Tree node for keys.
 
 ### Example:
 ```
-import {KeyNode} from 'key-nodes':
+import {KeyNode} from 'key-nodes';
 
 // Start with root key node.
 const foo = new KeyNode('foo');
@@ -24,12 +24,12 @@ console.log(bar.hasSibling('foo')); // true
 // Add child key node
 const baz = foo.addChild('baz');
 
-console.log(foo.Child('baz')); // true
+console.log(foo.hasChild('baz')); // true
 
 // Add child to baz key node
 const qux = baz.addChild('qux');
 
-console.log(baz.Child('qux')); // true
+console.log(baz.hasChild('qux')); // true
 
 // Add indexes
 const arr0 = qux.addChild(0);
@@ -45,7 +45,7 @@ Tree node for key/value pairs.
 
 ### Example:
 ```
-import {KeyValueNode} from 'key-nodes':
+import {KeyValueNode} from 'key-nodes';
 
 // Start with root key/value node.
 const foo = new KeyValueNode('foo');
@@ -89,7 +89,7 @@ console.log(bar.value); // 17
 // Add child key/value node
 const baz = foo.addChild('baz');
 
-console.log(foo.Child('baz')); // true
+console.log(foo.hasChild('baz')); // true
 
 // Add indexes with values
 const arr0 = baz.addChild(0, 'Value at index 0');
