@@ -285,7 +285,10 @@ export class KeyValueNodeHistoricalResultValue<Tvalue> {
   
   private readonly [HIST_SET]:()=>boolean;
   
-  constructor(readonly value:Tvalue, set:()=>boolean) {
+  readonly value:Tvalue;
+
+  constructor(value:Tvalue, set:()=>boolean) {
+    this.value = value;
     this[HIST_SET] = set;
   }
   
