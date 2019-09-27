@@ -24,6 +24,6 @@
     "typescript": "^3.6.2"
   },
   "dependencies": {
-    "path-notation": "^1.0.0"
+    "path-notation": "^2.0.0"
   }
 }
