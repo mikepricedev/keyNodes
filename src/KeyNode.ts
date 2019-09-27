@@ -142,7 +142,7 @@ export default class KeyNode<
     //Lazy cache
     if(this[ROOT_KEY] === undefined){
 
-      this[ROOT_KEY] = this.pathToKey().next().value;
+      this[ROOT_KEY] = this.pathToKey(true).next().value;
 
     }
 
