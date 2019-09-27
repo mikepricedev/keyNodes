@@ -21,12 +21,6 @@ describe(`KeyNode`,()=>{
 
   describe('Instantiation',()=>{
 
-    it(`Extends 'String'.`,()=>{
-
-      expect(fooKey).to.be.instanceof(String);
-
-    });
-
     it(`Creates a deep copy of any KeyNode passed as first constructor arg.`,
       ()=>
     {
@@ -54,7 +48,7 @@ describe(`KeyNode`,()=>{
     });
 
     it(`Throws KeyNodeError if sibling key literal already exists.`,()=>{
-
+      
       const throws = ()=> fooKey.addChild('bar');
 
       expect(throws).to.throw(KeyNodeError);
@@ -199,12 +193,6 @@ describe(`KeyNode`,()=>{
 
       });
 
-      it(`Caches PathNotation instance after first read.`,()=>{
-
-        expect(fooBarQuxKey.path).to.equal(fooBarQuxKey.path);
-
-      });
-
     });
 
   });
@@ -283,6 +271,30 @@ describe(`KeyNode`,()=>{
 
     });
 
+    describe('removeChild',()=>{
+
+      it('Removes child key node.',() =>{
+
+        expect(fooKey.hasChild('bar')).to.be.true;
+        fooKey.removeChild('bar');
+        expect(fooKey.hasChild('bar')).to.be.false;
+
+      });
+
+      it(`Returns true when removal is successful.`,() =>{
+
+        expect(fooKey.removeChild('bar')).to.be.true;
+
+      });
+      
+      it(`Returns false when removal is unsuccessful.`,() =>{
+
+        expect(fooKey.removeChild('DNE')).to.be.false;
+
+      });
+
+    });
+
     describe('hasSibling',()=>{
 
       it(`Returns true if KeyNode has sibling key.`,()=>{
@@ -309,7 +321,6 @@ describe(`KeyNode`,()=>{
       });
 
     });
-    
 
     describe('addSibling',()=>{
 
@@ -462,6 +473,56 @@ describe(`KeyNode`,()=>{
         expect(Array.from(fooKey.pathToKey())).to.deep.equal([fooKey]);
         expect(Array.from(fooKey.pathToKey(false))).to.have.lengthOf(0);
 
+      });
+
+    });
+
+    describe('toString',()=>{
+
+      it('Returns key as string.',()=>{
+
+        expect(fooBazKey.toString()).to.equal('baz');
+
+      });
+
+      it(`Converts 'index' key to string.`,()=>{
+
+        const indexKey = fooBazKey.addChild(10);
+
+        expect(indexKey.key).to.equal(10);
+        expect(indexKey.toString()).to.equal('10');
+
+      });
+
+    });
+
+    describe('valueOf',()=>{
+
+      it('Returns key primitive.',()=>{
+
+        expect(fooBazKey.valueOf()).to.equal('baz');
+
+        const indexKey = fooBazKey.addChild(10);
+        expect(indexKey.valueOf()).to.equal(10);
+
+      });
+
+      it(`Converts 'index' key overridden by a sibling of type 'key' to string.`
+        ,()=>
+      {
+
+        const indexKey = fooBazKey.addChild(10);
+
+        expect(indexKey.valueOf()).to.equal(10);
+        
+        indexKey.addSibling('keyType');
+        
+        expect(indexKey.valueOf()).to.equal('10');
+        
+        indexKey.removeSibling('keyType');
+        
+        expect(indexKey.valueOf()).to.equal(10);
+      
       });
 
     });

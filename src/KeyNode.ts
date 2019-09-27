@@ -7,7 +7,6 @@ const DEPTH:unique symbol = Symbol();
 const KEY:unique symbol = Symbol();
 const KEY_TYPE:unique symbol = Symbol();
 const PARENT:unique symbol = Symbol();
-const PATH_NOTATION:unique symbol = Symbol();
 const ROOT_KEY:unique symbol = Symbol();
 const ROOT_KEY_NODES:unique symbol = Symbol();
 
@@ -17,14 +16,14 @@ export interface IprivateIniArgs<Tself extends KeyNode> {
 }
 
 /**
- * @remarks
+ * @note
  * Derived class definitions MUST pass themselves to `Tself`.  `Tself` should
  * NOT be passed during [[KeyNode]] instantiation.
  */
 export default class KeyNode<
     Tkey extends string | number = string | number,
     Tself extends KeyNode = KeyNode<string | number, any>,
-  > extends String 
+  >
 {
 
   private readonly [CHILDREN] = new Map<string, Tself>();
@@ -32,7 +31,6 @@ export default class KeyNode<
   private readonly [KEY]:Tkey;
   private readonly [KEY_TYPE]:'key' | 'index';
   private readonly [PARENT]:Tself | null;
-  private [PATH_NOTATION]:PathNotation;
   private [ROOT_KEY]:Tself;
   private readonly [ROOT_KEY_NODES]:Map<string, Tself>;
 
@@ -45,9 +43,6 @@ export default class KeyNode<
     {_parent_:null, _rootKeyNodes_:new Map()})
   {
     
-    
-    super(key.toString());
-    
     const keyStr = key.toString();
     
     this[PARENT] = _privateIniArgs_._parent_;
@@ -57,8 +52,11 @@ export default class KeyNode<
       this[PARENT][CHILDREN].has(keyStr)) 
     {
       
+      const siblingKey = this[PARENT] === null ? this[ROOT_KEY_NODES].get(keyStr) :
+      this[PARENT][CHILDREN].get(keyStr)
+
       throw new KeyNodeError<KeyNode>(`'${keyStr}' already exists in sibling set.`+
-      `  Sibling key literals must be unique.`, this.getSibling(keyStr));
+      `  Sibling key literals must be unique.`, siblingKey);
     
     }
 
@@ -67,7 +65,8 @@ export default class KeyNode<
     // the KeyNode passed is a parent of itself.
     if(key instanceof KeyNode) {
       
-      this[KEY] = key.key;
+      this[KEY] = key[KEY];
+      this[KEY_TYPE] = key[KEY_TYPE];
 
       for(const childNode of key.children()) {
         
@@ -78,10 +77,12 @@ export default class KeyNode<
     } else {
     
       this[KEY] = key;
+      this[KEY_TYPE] = typeof this[KEY] === 'number'
+        && Number.isInteger(<number>this[KEY]) && this[KEY] > -1
+        ? 'index' : 'key';
     
     }
 
-    this[KEY_TYPE] = typeof this[KEY] === 'string' ? 'key' : 'index';
     
     if(this[PARENT] === null) {
       
@@ -178,18 +179,11 @@ export default class KeyNode<
    */
   get path():PathNotation {
 
-    //Lazy cache
-    if(this[PATH_NOTATION] === undefined){
-
-      this[PATH_NOTATION] = new PathNotation(function*(this:Tself){
-        for(const keyNode of this.pathToKey()){
-          yield keyNode.toString();
-        }
-      }.call(this));
-
-    }
-
-    return this[PATH_NOTATION];
+    return new PathNotation(...function*(this:Tself){
+      for(const keyNode of this.pathToKey()){
+        yield keyNode.toString();
+      }
+    }.call(this));
 
   }
 
@@ -240,7 +234,7 @@ export default class KeyNode<
   addChild<TchildKey extends number | string>(
     childKey:TchildKey | KeyNode<TchildKey>):KeyNode<TchildKey> 
   {
-    
+
     return new KeyNode<TchildKey>(childKey, this._privateIniArgs('child'));
 
   }
@@ -407,9 +401,16 @@ export default class KeyNode<
     return <any>keyNode[ROOT_KEY_NODES].values();
   }
 
-}
+  toString():string {
 
-let test = new KeyNode(1);
-let test2 = new KeyNode(test);
-let key = test2.key;
-let key2: typeof test2.key;
+    return this[KEY].toString();
+
+  }
+
+  valueOf(): string | number {
+
+    return this.keyType === 'index' ? this[KEY] : this[KEY].toString();
+
+  }
+
+}
