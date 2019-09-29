@@ -27,12 +27,12 @@ export default class KeyNode<
 {
 
   private readonly [CHILDREN] = new Map<string, Tself>();
-  private readonly [DEPTH]:number;
+  private [DEPTH]:number;
   private readonly [KEY]:Tkey;
   private readonly [KEY_TYPE]:'key' | 'index';
-  private readonly [PARENT]:Tself | null;
+  private [PARENT]:Tself | null;
   private [ROOT_KEY]:Tself;
-  private readonly [ROOT_KEY_NODES]:Map<string, Tself>;
+  private [ROOT_KEY_NODES]:Map<string, Tself>;
 
   /**
    * @param _privateIniArgs_ This argument is private and should NOT be passed
@@ -150,7 +150,7 @@ export default class KeyNode<
 
   }
 
-  get isRootKey(): boolean {
+  get isRootKey():boolean {
     
     return this[PARENT] === null;
   
@@ -162,7 +162,14 @@ export default class KeyNode<
 
   }
 
-  get numChildren():number{
+  get numSiblings():number {
+
+    return (this[PARENT] === null ? 
+      this[ROOT_KEY_NODES].size : this[PARENT][CHILDREN].size) - 1;
+
+  }
+
+  get numChildren():number {
 
     return this[CHILDREN].size;
 
@@ -239,12 +246,30 @@ export default class KeyNode<
 
   }
 
+  /**
+   * @note
+   * When removal is successful, the removed child [[KeyNode]] is transformed 
+   * into a root [[KeyNode]].
+   */
   removeChild(childKey:string | number):boolean {
 
-    return this[CHILDREN].delete(childKey.toString());
+    const child = this.getChild(childKey);
+
+    // Convert child into root KeyNode if delete is successful
+    if(child !== null && this[CHILDREN].delete(childKey.toString())) {
+
+      child[DEPTH] = 0;
+      child[PARENT] = null;
+      child[ROOT_KEY_NODES] = new Map();
+
+      return true;
+
+    }
+
+    return false;
 
   }
-
+  
   hasSibling(siblingKey:string | number):boolean {
 
     const siblingKeyLiteral = siblingKey.toString();
@@ -302,23 +327,29 @@ export default class KeyNode<
 
   }
 
+  /**
+   * @note
+   * When removal is successful, the removed sibling [[KeyNode]] is
+   * transformed into a root [[KeyNode]].
+   */
   removeSibling(siblingKey:string | number): boolean {
 
-    const siblingKeyLiteral = siblingKey.toString();
+    const sibling = this.getSibling(siblingKey);
 
-    if(this.hasSibling(siblingKey) === false) {
-    
-      return false;
-    
-    } else if(this.parent === null) {
+    if(sibling !== null && 
+      (this[PARENT] === null ? this[ROOT_KEY_NODES] : this[PARENT][CHILDREN])
+        .delete(siblingKey.toString()))
+    {
 
-      return this[ROOT_KEY_NODES].delete(siblingKeyLiteral)
+      sibling[DEPTH] = 0;
+      sibling[PARENT] = null;
+      sibling[ROOT_KEY_NODES] = new Map();
 
-    } else {
-
-      return this[PARENT][CHILDREN].delete(siblingKeyLiteral);
+      return true;
 
     }
+
+    return false;
 
   }
 
@@ -399,6 +430,50 @@ export default class KeyNode<
     }
 
     return <any>keyNode[ROOT_KEY_NODES].values();
+  }
+
+  /**
+   * Iterates decedent terminal [[KeyNode]]s or this [[KeyNode]] if it is
+   * terminal (default).
+   * @param global pass `true` to iterate all terminal keys in the hierarchy.
+   */
+  *terminalKeys(global = false):IterableIterator<Tself> {
+
+    if(global) {
+
+      for(const rootKey of this.rootKeys()) {
+
+        yield* (<any>rootKey).terminalKeys(false);
+
+      }
+
+      return;
+    }
+
+    if(this[CHILDREN].size === 0) {
+    
+      yield <any>this;
+    
+      return;
+    
+    }
+
+    const decedents = [...this.children()];
+
+    for(const decedent of decedents) {
+
+      if(decedent[CHILDREN].size === 0) {
+
+        yield decedent;
+
+      } else {
+
+        decedents.push(...<any>decedent.children());
+
+      }
+
+    }
+
   }
 
   toString():string {

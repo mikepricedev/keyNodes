@@ -4,6 +4,7 @@ const VALUES:unique symbol = Symbol();
 const CUR_VALUE_INDEX:unique symbol = Symbol();
 const KEEP_HISTORY:unique symbol = Symbol();
 const HISTORY_EPOCH:unique symbol = Symbol();
+const NODES_AND_UPDATE_ORDER:unique symbol = Symbol();
 
 export default class KeyValueNode <
   Tkey extends string | number = string | number,
@@ -17,7 +18,8 @@ export default class KeyValueNode <
   private [KEEP_HISTORY]: number | boolean = 
     typeof KeyValueNode[KEEP_HISTORY] === 'number' &&
       KeyValueNode[KEEP_HISTORY] < 1 ? false : KeyValueNode[KEEP_HISTORY];
-  private [HISTORY_EPOCH]:symbol = Symbol(); 
+  private [HISTORY_EPOCH]:symbol = Symbol();
+  private [NODES_AND_UPDATE_ORDER]:(Tself | this)[];
 
   constructor(key:KeyValueNode<Tkey, Tvalue>, value?:undefined,
     _privateIniArgs_?:Partial<IprivateIniArgs<Tself>>);
@@ -27,8 +29,34 @@ export default class KeyValueNode <
     _privateIniArgs_?:Partial<IprivateIniArgs<Tself>>) {
 
     super(key, _privateIniArgs_);
-    
+
     this[VALUES].push(key instanceof KeyValueNode ? key.value : value);
+    
+    // Retrieve nodes and update order lib from parent
+    if(this.parent !== null) {
+      
+      this[NODES_AND_UPDATE_ORDER] = <any>this.parent[NODES_AND_UPDATE_ORDER];
+    
+    //  Retrieve nodes and update order lib from sibling  
+    } else if(this.numSiblings > 0) {
+
+      for(const sibling of this.siblings()) {
+
+        this[NODES_AND_UPDATE_ORDER] = <any>sibling[NODES_AND_UPDATE_ORDER];
+        
+        break;
+
+      }
+      
+    // Create nodes and update order lib
+    } else {
+      
+      this[NODES_AND_UPDATE_ORDER] = [];
+      
+    }
+
+    // Add self to nodes and update order lib
+    this[NODES_AND_UPDATE_ORDER].push(this);
 
   }
 
@@ -42,6 +70,8 @@ export default class KeyValueNode <
   set value(value:Tvalue) {
 
     this[HISTORY_EPOCH] = Symbol();
+
+    this._logValueUpdate();
 
     if(this[KEEP_HISTORY] === false) {
       
@@ -141,6 +171,19 @@ export default class KeyValueNode <
   }
 
   //Methods
+  /**
+   * @note
+   * Derived class methods that update the value, must call this method.
+   */
+  protected _logValueUpdate():void {
+
+    this[NODES_AND_UPDATE_ORDER]
+        .splice(this[NODES_AND_UPDATE_ORDER].indexOf(this), 1);
+
+    this[NODES_AND_UPDATE_ORDER].push(this);
+
+  }
+
   addChild<Tchildvalue, TchildKey extends string | number>(
     childKey:KeyValueNode<TchildKey, Tchildvalue>)
       :KeyValueNode<TchildKey, Tchildvalue>;
@@ -154,6 +197,42 @@ export default class KeyValueNode <
 
     return new KeyValueNode<TchildKey, Tchildvalue>
       (<TchildKey>childKey, value, this._privateIniArgs('child'));
+
+  }
+
+  removeChild(childKey:string | number):boolean {
+
+    const child = this.getChild(childKey);
+
+    if(child !== null && super.removeChild(childKey)) {
+      
+      // All the child and child's descendants must be removed from the node
+      // and update order lib.  Additional all the child and child's 
+      // descendants must have their node and update order libs replaced with a
+      // lib only containing themselves and in the order of update thus far.
+      
+      const childAndDecedentUpdateOrder: (Tself | this)[] = [];
+
+      const nodesAndUpdateOrder = this[NODES_AND_UPDATE_ORDER]; 
+
+      for(const childOrDecedent of child.updateOrder(false)) {
+
+        childAndDecedentUpdateOrder.push(<any>childOrDecedent);
+
+        childOrDecedent[NODES_AND_UPDATE_ORDER] = 
+          childAndDecedentUpdateOrder;
+        
+          nodesAndUpdateOrder
+            .splice(nodesAndUpdateOrder.indexOf(<any>childOrDecedent), 1);
+
+      }
+
+      // Correct the order of updates
+      childAndDecedentUpdateOrder.reverse();
+
+    }
+
+    return false;
 
   }
 
@@ -173,6 +252,44 @@ export default class KeyValueNode <
 
   }
 
+  removeSibling(siblingKey:string | number):boolean {
+
+    const sibling = this.getSibling(siblingKey);
+
+    if(sibling !== null && super.removeSibling(siblingKey)) {
+      
+      // All the sibling and sibling's descendants must be removed from the node
+      // and update order lib.  Additional all the sibling and sibling's 
+      // descendants must have their node and update order libs replaced with a
+      // lib only containing themselves and in the order of update thus far.
+      
+      const siblingAndDecedentUpdateOrder: (Tself | this)[] = [];
+
+      const nodesAndUpdateOrder = this[NODES_AND_UPDATE_ORDER]; 
+
+      for(const siblingOrDecedent of sibling.updateOrder(false)) {
+
+        siblingAndDecedentUpdateOrder.push(<any>siblingOrDecedent);
+
+        siblingOrDecedent[NODES_AND_UPDATE_ORDER] = 
+          siblingAndDecedentUpdateOrder;
+        
+          nodesAndUpdateOrder
+            .splice(nodesAndUpdateOrder.indexOf(<any>siblingOrDecedent), 1);
+
+      }
+
+      // Correct the order of updates
+      siblingAndDecedentUpdateOrder.reverse();
+
+      return true;
+
+    }
+
+    return false;
+    
+  }
+
   undo():boolean {
 
     if(this[CUR_VALUE_INDEX] === 0) {
@@ -182,6 +299,8 @@ export default class KeyValueNode <
     }
 
     this[CUR_VALUE_INDEX]--;
+    
+    this._logValueUpdate();
 
     return true;
 
@@ -196,6 +315,8 @@ export default class KeyValueNode <
     }
 
     this[CUR_VALUE_INDEX]++;
+
+    this._logValueUpdate();
 
     return true;
 
@@ -227,8 +348,13 @@ export default class KeyValueNode <
   protected _setHistoricalValue(index:number, historyEpoch:symbol):boolean {
 
     if(historyEpoch === this[HISTORY_EPOCH]) {
+     
       this[CUR_VALUE_INDEX] = index;
+     
+      this._logValueUpdate();
+     
       return true;
+    
     }
 
     return false;
@@ -268,8 +394,172 @@ export default class KeyValueNode <
       && keepHistory < 1 ? false : keepHistory;
 
   }
+  
+  //Static Methods
+  /**
+   * Generates document from the [[KeyValueNode]] including it's siblings 
+   * (default), and all of the descendants recursively in update order;
+   * most recent overriding latest.
+   * @param includeSiblings pass `false` to exclude siblings.
+   * @note
+   * [[KeyValueNode]] de-couples Javascript object as reference behavior.  As a
+   * consequence setting object values on non-terminal keys will not propagate
+   * to decedent [[KeyValueNode]]s.  Additionally setting a decedent 
+   * [[KeyValueNode]] more recent in historical order will override the object
+   * value set on the ancestor [[KeyValueNode]] when calling
+   * [[KeyValueNode.generateDoc]].  It is a best practice for most use cases to
+   * only set values on terminal [[KeyValueNode]]s.
+   */
+  generateDoc(includeSiblings = true) {
 
+    const {depth:startDepth} = this;
 
+    // Create root doc
+    let doc;
+    if(includeSiblings) {
+
+      doc = this.keyType === 'index' ? [] : {};
+
+    } else if(this.keyType === 'key') {
+
+      // When siblings are NOT included key type 'index' overrides are ignored.
+      doc = typeof this.key === 'number' ? [] : {};
+
+    } else {
+
+      doc = [];
+
+    }
+
+    const buildList = new Set<this| Tself>();
+
+    for(const keyValNodeToBuild of this.updateOrder(includeSiblings)) {
+      
+      if(buildList.has(keyValNodeToBuild)) {
+
+        continue;
+      
+      // Key/val node on the root doc
+      } else if(keyValNodeToBuild.depth === startDepth)
+      {
+
+        doc[keyValNodeToBuild.key] = keyValNodeToBuild.value;
+
+        buildList.add(keyValNodeToBuild);
+
+        // All child nodes and descendants have been overridden by this change.
+        const descendants = [...keyValNodeToBuild.children()];
+
+        for(const descendant of descendants) {
+
+          buildList.add(<Tself>descendant);
+
+          descendants.push(...descendant.children());
+
+        }
+
+        continue;
+
+      }
+
+      const pathToKeyValNodeIter = keyValNodeToBuild.pathToKey(false);
+      let pathToKeyValNodeIterResult = pathToKeyValNodeIter.next();
+      
+      // NOTE: Do not need to check done flag here b/c any KeyValueNodes with
+      // depth the same as the key/val node to build would have been handled
+      // by the if/else statement: keyValNodeToBuild.depth === startDepth
+      // The iterator WILL NOT finish before the while condition is false.
+      while(pathToKeyValNodeIterResult.value.depth < startDepth)
+      {
+        pathToKeyValNodeIterResult = pathToKeyValNodeIter.next();
+      }
+      
+      let docToSetOn = doc;
+      do {
+
+        const ancestorKeyValueNode = <Tself>pathToKeyValNodeIterResult.value;
+        
+        if(!buildList.has(ancestorKeyValueNode)) {
+
+          for(const ancestorChild of ancestorKeyValueNode.children()) {
+
+            docToSetOn[ancestorKeyValueNode.key] = 
+              ancestorChild.keyType === 'index' ? [] : {};
+
+          }
+
+        }
+          
+        docToSetOn = docToSetOn[ancestorKeyValueNode.key];
+
+      } while(!pathToKeyValNodeIterResult.done);
+
+      docToSetOn[keyValNodeToBuild.key] = keyValNodeToBuild.value;
+
+      buildList.add(keyValNodeToBuild);
+
+      // All child nodes and descendants have been overridden by this change.
+      const descendants = [...keyValNodeToBuild.children()];
+
+      for(const descendant of descendants) {
+
+        buildList.add(<Tself>descendant);
+
+        descendants.push(...descendant.children());
+
+      }
+
+    }
+
+    return doc;
+
+  }
+  
+
+  /**
+   * Iterates updates of this [[KeyValueNode]], it's siblings (default), 
+   * and all of the descendants recursively in order of value updates 
+   * most recent to latest.
+   * @param includeSiblings pass `false` to exclude the siblings.
+   */
+  *updateOrder(includeSiblings = true):
+    IterableIterator<Tself> 
+  {
+
+    const nodesAndUpdateOrder = this[NODES_AND_UPDATE_ORDER];
+
+    const updateOrder:(Tself)[] =
+      new Array(nodesAndUpdateOrder.length);
+    
+    const keyValueNodes:(Tself)[] = [<any>this];
+    
+    if(includeSiblings) {
+    
+      keyValueNodes.push(...<any>this.siblings());
+    
+    }
+    
+    for(const keyValNode of keyValueNodes) {
+
+      updateOrder[nodesAndUpdateOrder.indexOf(keyValNode)] = keyValNode;
+
+      keyValueNodes.push(...<any>keyValNode.children());
+
+    }
+
+    for(let i = updateOrder.length - 1; i > -1; i--) {
+
+      const keyValNode = updateOrder[i];
+
+      if(keyValNode !== undefined) {
+
+        yield keyValNode;
+
+      }
+
+    }
+
+  }
 
 }
 
