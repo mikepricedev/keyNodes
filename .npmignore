@@ -1,5 +1,6 @@
 src
 mocha.opts
 tsconfig.json
+examples.ts
 keyNodes.code-workspace
 .vscode
