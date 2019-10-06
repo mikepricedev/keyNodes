@@ -1,9 +1,9 @@
 import KeyNode, {IprivateIniArgs} from './KeyNode';
 
-const VALUES:unique symbol = Symbol();
 const CUR_VALUE_INDEX:unique symbol = Symbol();
-const KEEP_HISTORY:unique symbol = Symbol();
 const HISTORY_EPOCH:unique symbol = Symbol();
+const KEEP_HISTORY:unique symbol = Symbol();
+const VALUES:unique symbol = Symbol();
 
 export default class KeyValueNode <
   Tkey extends string | number = string | number,
@@ -58,16 +58,14 @@ export default class KeyValueNode <
     
     }
 
-    this._setDescendantValues(value);
-
-    this[HISTORY_EPOCH] = Symbol();
-
     if(this[KEEP_HISTORY] === false) {
       
       this[VALUES][0] = value;
       return;
-
+      
     }
+    
+    this[HISTORY_EPOCH] = Symbol();
 
     // Overwrite forward history items
     this[VALUES].splice(this[CUR_VALUE_INDEX] + 1);
@@ -92,37 +90,6 @@ export default class KeyValueNode <
 
   }
 
-  /**
-   * @note
-   * Deriving classes methods that set values must call this method with the 
-   * value.
-   */
-  protected _setDescendantValues(value:Tvalue) {
-
-    if(!this.isTerminalKey) {
-
-      if(Object(value) !== value) {
-
-        for(const child of this.children()) {
-
-          child.value = undefined;
-
-        }
-
-      } else {
-        
-        for(const child of this.children()) {
-  
-          child.value = value[child.key];
-
-        }
-
-      }
-
-    }
-
-  }
-
   get keepHistory():boolean | number {
     
     return this[KEEP_HISTORY];
@@ -130,10 +97,9 @@ export default class KeyValueNode <
   }
 
   /**
-   * Overrides default history conditions for this [[KeyValueNode]] instance.
-   * Set `true` to keep all set values, `false` to keep no
-   * historical values, or a `number` indicating the number historical values 
-   * to keep.
+   * Overrides default history condition for this [[KeyValueNode]]. Set `true`
+   * to keep all set values, `false` to keep no historical values, or the
+   * `number` of number historical values to keep.
    */
   set keepHistory(keepHistory:boolean | number) {
 
@@ -142,7 +108,7 @@ export default class KeyValueNode <
     this[KEEP_HISTORY] = typeof keepHistory === 'number'
       && keepHistory < 1 ? false : keepHistory;
 
-      // Change does not require historical values modification nor epoch update.
+    // Change does not require historical values modification nor epoch update.
     if(this[KEEP_HISTORY] === prevKeepHistory || this[KEEP_HISTORY] === true) {
       return;
     }
@@ -196,7 +162,7 @@ export default class KeyValueNode <
       :KeyValueNode<TchildKey, Tchildvalue>;
   addChild<Tchildvalue, TchildKey extends string | number>(
     childKey:TchildKey,
-    value?:Tchildvalue):KeyValueNode<TchildKey, Tchildvalue>;
+    value?:Tchildvalue):KeyValueNode<TchildKey, Tchildvalue>; 
   addChild<Tchildvalue, TchildKey extends string | number>(
     childKey:TchildKey | KeyValueNode<TchildKey, Tchildvalue>,
     value?:Tchildvalue):KeyValueNode<TchildKey, Tchildvalue>
@@ -223,11 +189,6 @@ export default class KeyValueNode <
 
   }
 
-  /**
-   * @note
-   * An undo on a non-terminal [[KeyValueNode]] is a value assignment on 
-   * descendant [[KeyValueNode]]ss.
-   */
   undo():boolean {
 
     if(this[CUR_VALUE_INDEX] === 0) {
@@ -237,18 +198,11 @@ export default class KeyValueNode <
     }
 
     this[CUR_VALUE_INDEX]--;
-
-    this._setDescendantValues(this[VALUES][this[CUR_VALUE_INDEX]]);
     
     return true;
 
   }
 
-  /**
-   * @note
-   * An redo on a non-terminal [[KeyValueNode]] is a value assignment on 
-   * descendant [[KeyValueNode]]s.
-   */
   redo():boolean {
 
     if(this[CUR_VALUE_INDEX] + 1 === this[VALUES].length) {
@@ -259,15 +213,10 @@ export default class KeyValueNode <
 
     this[CUR_VALUE_INDEX]++;
 
-    this._setDescendantValues(this[VALUES][this[CUR_VALUE_INDEX]]);
-
     return true;
 
   }
 
-  /**
-   * Historical values set via [[KeyValueNode.value]]
-   */
   history(direction:TkeyValueNodeHistoricalDirection = 'undo'):
     KeyValueNodeHistoricalIterableIterator<Tvalue> 
   {
@@ -276,7 +225,8 @@ export default class KeyValueNode <
     const historyEpoch = this[HISTORY_EPOCH];
 
     return new KeyValueNodeHistoricalIterableIterator(direction,
-      direction === 'undo' ? this[CUR_VALUE_INDEX] - 1 : this[CUR_VALUE_INDEX] + 1, this[VALUES],
+      direction === 'undo' ? 
+        this[CUR_VALUE_INDEX] - 1 : this[CUR_VALUE_INDEX] + 1, this[VALUES],
       (index:number):boolean => this._setHistoricalValue(index, historyEpoch),
       ()=>this._historyIteratorIsValid(historyEpoch));
 
@@ -284,9 +234,11 @@ export default class KeyValueNode <
 
   /**
    * Provides hook for derived classes to be notified when value is updated by
-   * an historical undo or redo action, reference [[KeyValueNode.history]] for
-   * context. *NOTE:* when overriding, *MUST* call `super._setHistoricalValue`
-   * and pass through args.
+   * a historical undo or redo action, reference [[KeyValueNode.history]] for
+   * context.
+   * @note
+   * When overriding, *MUST* call `super._setHistoricalValue` and pass through
+   * args.
    */
   protected _setHistoricalValue(index:number, historyEpoch:symbol):boolean {
 
@@ -294,8 +246,6 @@ export default class KeyValueNode <
      
       this[CUR_VALUE_INDEX] = index;
       
-      this._setDescendantValues(this[VALUES][this[CUR_VALUE_INDEX]]);
-
       return true;
     
     }
@@ -306,8 +256,10 @@ export default class KeyValueNode <
 
   /**
    * Provides hook for derived classes. Reference [[KeyValueNode.history]] for 
-   * context. *NOTE:* when overriding,  *MUST* call
-   * `super._historyIteratorIsValid` and pass through args.
+   * context.
+   * @note
+   * When overriding, *MUST* call `super._historyIteratorIsValid` and pass
+   * through args.
    */
   protected _historyIteratorIsValid(historyEpoch:symbol):boolean {
     
@@ -320,10 +272,9 @@ export default class KeyValueNode <
 
   /**
    * Sets default history conditions for all [[KeyValueNode]] instances.
-   * Individual instances can override this default.
-   * Set `true` to keep all set values, `false` to keep no
-   * historical values, or a `number` indicating the number historical values 
-   * to keep per [[KeyValueNode]] instance.
+   * Individual instances can override this default. Set `true` to keep all set
+   * values, `false` to keep no historical values, or the `number` of historical
+   * values to keep per [[KeyValueNode]] instance.
    */
   static get keepHistory():boolean | number {
   
@@ -335,85 +286,6 @@ export default class KeyValueNode <
 
     this[KEEP_HISTORY] = typeof keepHistory === 'number'
       && keepHistory < 1 ? false : keepHistory;
-
-  }
-  
-  //Static Methods
-  /**
-   * Generates document from the terminal keys of the this [[KeyValueNode]] and 
-   * it's sibling [[KeyValueNode]] (default).
-   * @param includeSiblings pass `false` to exclude siblings.
-   */
-  generateDoc(includeSiblings = true) {
-
-    const masterParent = this.parent;
-
-    // Create root doc
-    let doc;
-    if(includeSiblings) {
-
-      doc = this.keyType === 'index' ? [] : {};
-
-    } else if(this.keyType === 'key') {
-
-      // When siblings are NOT included key type 'index' overrides are ignored.
-      doc = typeof this.key === 'number' ? [] : {};
-
-    } else {
-
-      doc = [];
-
-    }
-
-    const built = new Map<this| Tself, any>([masterParent, doc]);
-
-    const terminalKeys:Tself[] = [...this.terminalKeys(false)]; 
-
-    if(includeSiblings) {
-
-      for(const sibling of this.siblings()) {
-
-        terminalKeys.push(...<any>sibling.terminalKeys(false));
-
-      }
-
-    }
-
-    for(const terminalKey of terminalKeys) {
-
-      built.set(terminalKey, terminalKey.value);
-
-      let child = <Tself>terminalKey;
-      let parent = <Tself>child.parent;
-
-      while(child !== masterParent) {
-
-        if(built.has(<Tself>parent)) {
-
-          built.get(parent)[child.key] = built.get(child);
-
-          break;
-        
-        }
-        
-        const parentValue = child.keyType === 'key' ? {} : [];
-
-        parentValue[child.key] = built.get(child);
-
-        built.set(<Tself>parent, parentValue);
-        
-        
-        child = parent;
-        parent = <Tself>child.parent;
-
-      }
-
-      
-
-    }
-    
-
-    return doc;
 
   }
 
@@ -438,13 +310,17 @@ export class KeyValueNodeHistoricalResultValue<Tvalue> {
     this[HIST_SET] = set;
   }
   
+  get [Symbol.toStringTag]() {
+  
+    return this.constructor.name;
+  
+  }
+
   /**
    * Returns `true` if historical value was successfully set.
    * @note
    * Setting a historical value via this method performs and undo or redo type 
-   * operation i.e. it does not utilize assignment.  Undo or redo operations 
-   * on a non-terminal [[KeyValueNode]] is a value assignment on 
-   * descendant [[KeyValueNode]]s.
+   * operation i.e. it does not utilize assignment.
    */
   set():boolean {
     return this[HIST_SET]();
@@ -479,7 +355,14 @@ export class KeyValueNodeHistoricalIterableIterator<Tvalue>
   
   }
 
-  next(...args:any[]):IteratorResult<KeyValueNodeHistoricalResultValue<Tvalue>> {
+  get [Symbol.toStringTag]() {
+  
+    return this.constructor.name;
+  
+  }
+
+  next(...args:any[]):IteratorResult<KeyValueNodeHistoricalResultValue<Tvalue>>
+  {
 
     if(this[HIST_DONE] || this[HIST_VALID]() === false) {
       

@@ -99,6 +99,40 @@ describe('KeyValueNode', ()=>{
 
     });
 
+    it(`Copies values history and keep history settings from KeyNodeValue passed
+        as first argument.`, ()=>
+    {
+
+      fooBazKey.keepHistory = true;
+
+      const val1 = Symbol();
+      const val2 = Symbol();
+
+      fooBazKey.value = val1;
+      fooBazKey.value = val2;
+
+      const fooBazKeyCopy = new KeyValueNode(fooBazKey);
+
+      expect(fooBazKeyCopy).property('keepHistory')
+        .to.equal(fooBazKey.keepHistory);
+
+      const bazHistoryIter = fooBazKey.history();
+
+      let i = 0;
+      for(const historicalVal of fooBazKeyCopy.history()) {
+
+        expect(historicalVal)
+          .property('value').to.equal(bazHistoryIter.next().value.value);
+        
+          i++;
+      
+      }
+
+      // Ensure test ran
+      expect(i).to.be.greaterThan(0);
+
+    });
+
   });
 
   describe('Accessors',()=>{
