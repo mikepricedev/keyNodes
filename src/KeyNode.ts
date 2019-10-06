@@ -7,7 +7,6 @@ const DEPTH:unique symbol = Symbol();
 const KEY:unique symbol = Symbol();
 const KEY_TYPE:unique symbol = Symbol();
 const PARENT:unique symbol = Symbol();
-const ROOT_KEY:unique symbol = Symbol();
 const ROOT_KEY_NODES:unique symbol = Symbol();
 
 export interface IprivateIniArgs<Tself extends KeyNode> {
@@ -18,7 +17,7 @@ export interface IprivateIniArgs<Tself extends KeyNode> {
 /**
  * @note
  * Derived class definitions MUST pass themselves to `Tself`.  `Tself` should
- * NOT be passed during [[KeyNode]] instantiation.
+ * **NOT** be passed during [[KeyNode]] instantiation.
  */
 export default class KeyNode<
     Tkey extends string | number = string | number,
@@ -31,12 +30,11 @@ export default class KeyNode<
   private readonly [KEY]:Tkey;
   private readonly [KEY_TYPE]:'key' | 'index';
   private [PARENT]:Tself | null;
-  private [ROOT_KEY]:Tself;
   private [ROOT_KEY_NODES]:Map<string, Tself>;
 
   /**
-   * @param _privateIniArgs_ This argument is private and should NOT be passed
-   * during instantiations.
+   * @param _privateIniArgs_ This argument is private and should **NOT** be
+   * passed during instantiations.
    */
   constructor(key:Tkey | KeyNode<Tkey>,
     _privateIniArgs_:Partial<IprivateIniArgs<Tself>> = 
@@ -68,7 +66,7 @@ export default class KeyNode<
       this[KEY] = key[KEY];
       this[KEY_TYPE] = key[KEY_TYPE];
 
-      for(const childNode of key.children()) {
+      for(const childNode of key[CHILDREN].values()) {
         
         this.addChild(childNode);
       
@@ -114,7 +112,7 @@ export default class KeyNode<
   /**
    * Returns "index" for keys of type "number" and "key" for keys of type 
    * "string".
-   * @remarks
+   * @note
    * Type "index" is overridden to "key" when a sibling [[KeyNode]] is
    * type "key".
    */
@@ -135,18 +133,12 @@ export default class KeyNode<
   }
 
   /**
-   * Returns the root key of the path that leads to this [[KeyNode]]
+   * Returns the root [[KeyNode]] of the path that leads to this [[KeyNode]].
    */
   get rootKey():Tself {
 
-    //Lazy cache
-    if(this[ROOT_KEY] === undefined){
 
-      this[ROOT_KEY] = this.pathToKey(true).next().value;
-
-    }
-
-    return this[ROOT_KEY];
+    return this.pathToKey(true).next().value;
 
   }
 
@@ -187,7 +179,7 @@ export default class KeyNode<
   get path():PathNotation {
 
     return new PathNotation(...function*(this:Tself){
-      for(const keyNode of this.pathToKey()){
+      for(const keyNode of this.pathToKey(true)){
         yield keyNode.toString();
       }
     }.call(this));
@@ -203,10 +195,10 @@ export default class KeyNode<
 
   //Methods
   /**
-   * @remarks
+   * @note
    * Supplies base class constructor `_privateIniArgs_` [[IprivateIniArgs]] for
-   * derived class implementation overrides of [[KeyNode.addChild]] and 
-   * [[KeyNode.addSibling]] (Required when extending this class).
+   * derived class overrides of [[KeyNode.addChild]] and [[KeyNode.addSibling]]
+   * **Required** when extending this [[KeyNode]].
    */
   protected _privateIniArgs(relation:'child' | 'sibling'):IprivateIniArgs<Tself>
   {
@@ -235,8 +227,10 @@ export default class KeyNode<
   }
 
   /**
-   * @notes When extending, must be overridden and return derived class.
-   * Utility `KeyNode._privateIniArgs` helps with override implementation.
+   * @note
+   * When extending, must be overridden and return derived class.
+   * Utility [[KeyNode._privateIniArgs]] **required** with override
+   * implementations.
    */
   addChild<TchildKey extends number | string>(
     childKey:TchildKey | KeyNode<TchildKey>):KeyNode<TchildKey> 
@@ -315,8 +309,10 @@ export default class KeyNode<
   }
 
   /**
-   * @remarks When extending, must be overridden and return derived class.
-   * Utility [[KeyNode._privateIniArgs]] helps with override implementation.
+   * @note
+   * When extending, must be overridden and return derived class.
+   * Utility [[KeyNode._privateIniArgs]] **required** with override
+   * implementations.
    */
   addSibling<TsiblingKey extends number | string>(
     siblingKey:TsiblingKey | KeyNode<TsiblingKey>):KeyNode<TsiblingKey> 
@@ -359,7 +355,7 @@ export default class KeyNode<
 
   }
 
-  *parents():IterableIterator<Tself> {
+  *ancestors():IterableIterator<Tself> {
 
     let pKey = this[PARENT];
 
@@ -375,8 +371,7 @@ export default class KeyNode<
 
   /**
    * Iterates all [[KeyNode]]s along path to the [[KeyNode]].
-   * @param includeSelf when `false` does NOT include the [[KeyNode]] as last
-   * iterator result.
+   * @param includeSelf when `false` does NOT include this [[KeyNode]].
    */
   *pathToKey(includeSelf = true):IterableIterator<Tself> {
 
@@ -433,9 +428,10 @@ export default class KeyNode<
   }
 
   /**
-   * Iterates decedent terminal [[KeyNode]]s or this [[KeyNode]] if it is
-   * terminal (default).
-   * @param global pass `true` to iterate all terminal keys in the hierarchy.
+   * Iterates decedent terminal [[KeyNode]]s (default).  If this [[KeyNode]]
+   * is terminal, iterates self.
+   * @param global pass `true` to iterate all terminal keys in the hierarchy
+   * from the terminal [[KeyNode]]s.
    */
   *terminalKeys(global = false):IterableIterator<Tself> {
 
@@ -458,19 +454,9 @@ export default class KeyNode<
     
     }
 
-    const decedents = [...this.children()];
+    for(const child of this[CHILDREN].values()) {
 
-    for(const decedent of decedents) {
-
-      if(decedent[CHILDREN].size === 0) {
-
-        yield decedent;
-
-      } else {
-
-        decedents.push(...<any>decedent.children());
-
-      }
+      yield* <any>child.terminalKeys(global);
 
     }
 

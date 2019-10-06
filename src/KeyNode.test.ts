@@ -97,11 +97,16 @@ describe(`KeyNode`,()=>{
 
       });
       
-      it('Is "index" when the key is a number.',()=>{
+      it('Is "index" when the key is a positive integer.',()=>{
 
         const indexKey = fooBarQuxKey.addChild(0);
 
         expect(indexKey).property('keyType').to.equal('index');
+        
+        const keyKey = fooBarQuxKey.addChild(-1);
+        
+        expect(keyKey).property('keyType').to.equal('key');
+        
 
       });
 
@@ -418,11 +423,11 @@ describe(`KeyNode`,()=>{
 
     });
 
-    describe(`parents`,()=>{
+    describe(`ancestors`,()=>{
 
       it(`Returns IterableIterator<Key> of parent keys to root key.`,()=>{
 
-        expect(Array.from(fooBarQuxKey.parents())).deep.equal([fooBarKey, fooKey]);
+        expect(Array.from(fooBarQuxKey.ancestors())).deep.equal([fooBarKey, fooKey]);
 
       });
 
@@ -472,6 +477,34 @@ describe(`KeyNode`,()=>{
 
         expect(Array.from(fooKey.pathToKey())).to.deep.equal([fooKey]);
         expect(Array.from(fooKey.pathToKey(false))).to.have.lengthOf(0);
+
+      });
+
+    });
+
+    describe('terminalKeys',()=>{
+
+      it(`Iterates all decedent terminal key nodes by default`,()=>{
+
+        const fooBarQuuxKey = fooBarKey.addChild('quux');
+
+        expect(Array.from(fooBarKey.terminalKeys()))
+          .members([fooBarQuxKey, fooBarQuuxKey])
+
+      });
+
+      it(`Iterates self if is terminal key node.`,()=>{
+
+        expect(Array.from(fooBarQuxKey.terminalKeys()))
+          .members([fooBarQuxKey])
+
+      });
+
+      it(`Iterates all terminal key nodes from root key nodes if true is passed
+          as argument.`,()=>{
+
+        expect(Array.from(fooBarQuxKey.terminalKeys(true)))
+          .members([fooBazKey, fooBarQuxKey])
 
       });
 
