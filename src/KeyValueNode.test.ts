@@ -353,6 +353,22 @@ describe('KeyValueNode', ()=>{
 
       });
 
+      it(`Removes all historical values when set to false`, ()=> {
+
+        fooBarQuxKey.keepHistory = true;
+
+        fooBarQuxKey.value = Symbol();
+        fooBarQuxKey.value = Symbol();
+        const curValue = Symbol();
+        fooBarQuxKey.value = curValue;
+
+        fooBarQuxKey.keepHistory = false;
+
+        expect(fooBarQuxKey).property('value').to.equal(curValue);
+
+
+      });
+
     });
 
   });

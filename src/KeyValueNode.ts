@@ -148,7 +148,8 @@ export default class KeyValueNode <
     // values modification and new epoch.
     } else if(this[VALUES].length > 1) { 
 
-      this[VALUES][0] = this[VALUES][CUR_VALUE_INDEX];
+      this[VALUES][0] = this[VALUES][this[CUR_VALUE_INDEX]];
+      this[CUR_VALUE_INDEX] = 0;
       this[VALUES].splice(1);
       this[HISTORY_EPOCH] = Symbol();
 
