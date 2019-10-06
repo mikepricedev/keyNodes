@@ -1,9 +1,7 @@
 # Key Nodes
 Tree nodes for key and key/value pairs in object path hierarchies.
 
-Full [docs](docs/README.md "docs").
-
-## [KeyNode](docs/classes/keynode.md "KeyNode")
+## [KeyNode](https://mikepricedev.github.io/keyNodes/classes/keynode.html "KeyNode")
 Tree node for keys.
 
 ### Example:
@@ -39,7 +37,7 @@ console.log(qux.keyType); // "key"
 
 ```
 
-## [KeyValueNode](docs/classes/keyvaluenode.md "KeyValueNode")
+## [KeyValueNode](https://mikepricedev.github.io/keyNodes/classes/keyvaluenode.html "KeyValueNode")
 Tree node for key/value pairs.
 
 ### Example:
@@ -101,3 +99,6 @@ console.log(arr1.value); // "Value at index 1"
 console.log(arr1.keyType); // "index"
 console.log(baz.keyType); // "key"
 ```
+
+#
+Full [docs](https://mikepricedev.github.io/keyNodes "docs").
