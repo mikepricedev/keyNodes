@@ -24,16 +24,16 @@
     "target": "ES2016"
   },
   "typedocOptions": {
-    "excludeExternals":true,
-    "excludeNotExported":true,
-    "excludePrivate":true,
-    "excludeProtected":true,
-    "hideGenerator":true,
+    "excludeExternals": true,
+    "excludeNotExported": true,
+    "excludePrivate": true,
+    "excludeProtected": false,
+    "gitRevision": null,
+    "hideGenerator": true,
     "mode": "file",
+    "name": "Key Nodes",
     "out": "docs",
-    "readme":"none",
-    "theme":"markdown",
-    "hideBreadcrumbs":true,
-    "hideSources":true
+    "readme": "none",
+    "theme": "minimal"
   }
 }

@@ -16,7 +16,7 @@ export interface IprivateIniArgs<Tself extends KeyNode> {
 
 /**
  * @note
- * Derived class definitions MUST pass themselves to `Tself`.  `Tself` should
+ * Derived class definitions **MUST** pass themselves to `Tself`.  `Tself` should
  * **NOT** be passed during [[KeyNode]] instantiation.
  */
 export default class KeyNode<
