@@ -33,8 +33,8 @@ export default class KeyNode<
   private [ROOT_KEY_NODES]:Map<string, Tself>;
 
   /**
-   * @param _privateIniArgs_ This argument is private and should **NOT** be
-   * passed during instantiations.
+   * @param _privateIniArgs_ This argument is used internally and should **NOT**
+   *  be passed during instantiations.
    */
   constructor(key:Tkey | KeyNode<Tkey>,
     _privateIniArgs_:Partial<IprivateIniArgs<Tself>> = 

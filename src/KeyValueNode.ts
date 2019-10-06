@@ -18,7 +18,11 @@ export default class KeyValueNode <
     typeof KeyValueNode[KEEP_HISTORY] === 'number' &&
       KeyValueNode[KEEP_HISTORY] < 1 ? false : KeyValueNode[KEEP_HISTORY];
   private [HISTORY_EPOCH]:symbol = Symbol();
-
+  
+  /**
+   * @param _privateIniArgs_ This argument is used internally and should **NOT**
+   *  be passed during instantiations.
+   */
   constructor(key:KeyValueNode<Tkey, Tvalue>, value?:undefined,
     _privateIniArgs_?:Partial<IprivateIniArgs<Tself>>);
   constructor(key:Tkey, value?:Tvalue,
@@ -98,8 +102,8 @@ export default class KeyValueNode <
 
   /**
    * Overrides default history condition for this [[KeyValueNode]]. Set `true`
-   * to keep all set values, `false` to keep no historical values, or the
-   * `number` of number historical values to keep.
+   * to keep all set values, `false` to keep no historical values, or set the
+   * `number` of historical values to keep.
    */
   set keepHistory(keepHistory:boolean | number) {
 
@@ -274,8 +278,8 @@ export default class KeyValueNode <
   /**
    * Sets default history conditions for all [[KeyValueNode]] instances.
    * Individual instances can override this default. Set `true` to keep all set
-   * values, `false` to keep no historical values, or the `number` of historical
-   * values to keep per [[KeyValueNode]] instance.
+   * values, `false` to keep no historical values, or set the `number` of
+   * historical values to keep per [[KeyValueNode]] instance.
    */
   static get keepHistory():boolean | number {
   
