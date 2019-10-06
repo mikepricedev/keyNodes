@@ -12,6 +12,10 @@
   },
   "author": "Michael Price <mikepricedev@gmail.com>",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikepricedev/keyNodes.git"
+  },
   "devDependencies": {
     "@types/chai": "^4.2.1",
     "@types/mocha": "^5.2.7",
