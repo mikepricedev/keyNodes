@@ -25,9 +25,8 @@ import {KeyNode, KeyValueNode} from './src/index';
   
   // Add indexes
   const arr0 = qux.addChild(0);
-  const arr1 = qux.addChild(1);
   
-  console.log(arr1.keyType); // "index"
+  console.log(arr0.keyType); // "index"
   console.log(qux.keyType); // "key"
 
 }
