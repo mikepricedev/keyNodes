@@ -330,6 +330,7 @@ export class KeyValueNodeHistoricalResultValue<Tvalue> {
   set():boolean {
     return this[HIST_SET]();
   }
+
 }
 
 /**
