@@ -180,7 +180,7 @@ export default class KeyNode<
 
     return new PathNotation(...function*(this:Tself){
       for(const keyNode of this.pathToKey(true)){
-        yield keyNode.toString();
+        yield keyNode.key;
       }
     }.call(this));
 

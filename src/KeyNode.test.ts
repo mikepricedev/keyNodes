@@ -198,6 +198,19 @@ describe(`KeyNode`,()=>{
 
       });
 
+      it(`It parses KeyValueNode index types into square bracket path notation.`,
+        ()=>
+      {
+        
+        const expectedPath = 'foo.baz[0]';
+        const indexKey = fooBazKey.addChild(0);
+        const path = indexKey.path;
+        
+        expect(path).to.be.instanceOf(PathNotation);
+        expect(path.toString()).to.equal(expectedPath);
+
+      });
+
     });
 
   });
